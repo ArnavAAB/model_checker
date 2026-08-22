@@ -847,15 +847,20 @@ function renderDomainOptions(){
 
 function renderCompareInputs(){
   const count = Math.min(10, Math.max(2, parseInt(document.getElementById('compareCount').value, 10) || 2));
+  const previousModels = [...document.querySelectorAll('.compare-model-row')].map(row=>({
+    name: row.querySelector('.compare-model-name').value,
+    endpoint: row.querySelector('.compare-model-endpoint').value
+  }));
   document.getElementById('compareCount').value = count;
   document.getElementById('compareModels').innerHTML = Array.from({length:count}, (_, index)=>`
     <div class="compare-model-row">
-      <input class="compare-model-name" type="text" placeholder="Model ${index + 1} name" aria-label="Model ${index + 1} name">
-      <input class="compare-model-endpoint" type="text" placeholder="REST API URL" aria-label="Model ${index + 1} REST API URL">
+      <input class="compare-model-name" type="text" placeholder="Model ${index + 1} name" aria-label="Model ${index + 1} name" value="${escapeHtml(previousModels[index]?.name || '')}">
+      <input class="compare-model-endpoint" type="text" placeholder="REST API URL" aria-label="Model ${index + 1} REST API URL" value="${escapeHtml(previousModels[index]?.endpoint || '')}">
     </div>`).join('');
 }
 
 document.getElementById('compareCount').addEventListener('change', renderCompareInputs);
+renderCompareInputs();
 renderDomainOptions();
 
 document.getElementById('tabDomain').addEventListener('click', ()=> switchTab('domain'));
