@@ -61,7 +61,7 @@ def query_model_api(endpoint_url: str, text_input: str, timeout_seconds=5.0):
     req = urllib.request.Request(
         endpoint_url,
         data=payload,
-        headers={"Content-Type": "application/json", "User-Agent": "VerifyLogic-Server/1.0"}
+        headers={"Content-Type": "application/json", "User-Agent": "VeritasAI-Server/1.0"}
     )
     
     start_time = time.perf_counter()
@@ -109,7 +109,7 @@ def frontend():
 @app.route("/api/health", methods=["GET"])
 def health_check():
     """Basic health check endpoint."""
-    return jsonify({"status": "active", "service": "VerifyLogic API Engine"})
+    return jsonify({"status": "active", "service": "Veritas AI API Engine"})
 
 
 @app.route("/api/chat", methods=["POST"])
@@ -468,5 +468,5 @@ def run_sandbox_comparison():
 
 if __name__ == "__main__":
     ensure_database()
-    print("🚀 VerifyLogic Central Backend running at http://127.0.0.1:5000")
+    print("🚀 Veritas AI Central Backend running at http://127.0.0.1:5000")
     app.run(port=5000, debug=True)

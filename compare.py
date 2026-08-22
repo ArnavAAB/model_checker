@@ -20,7 +20,7 @@ def query_model(endpoint_url, text_input, timeout_seconds=5.0):
     req = urllib.request.Request(
         endpoint_url,
         data=payload,
-        headers={"Content-Type": "application/json", "User-Agent": "VerifyLogic-Sandbox/1.0"}
+        headers={"Content-Type": "application/json", "User-Agent": "VeritasAI-Sandbox/1.0"}
     )
     
     start_time = time.perf_counter()
@@ -236,7 +236,7 @@ def collect_custom_test_cases():
 
 def run_comparison():
     print("=" * 70)
-    print("              VERIFYLOGIC BUYER SANDBOX COMPARATOR")
+    print("              VERITAS AI BUYER SANDBOX COMPARATOR")
     print("=" * 70)
 
     models = collect_models_to_test()

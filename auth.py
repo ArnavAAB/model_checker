@@ -1,5 +1,5 @@
 """
-Google Sign-In for VerifyLogic.
+Google Sign-In for Veritas AI.
 
 Wires up an OAuth 2.0 / OpenID Connect "Sign in with Google" flow using
 Authlib, backed by Flask's server-side session. On successful login we

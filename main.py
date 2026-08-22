@@ -9,7 +9,7 @@ from compare import run_comparison
 
 def show_menu():
     print("\n" + "=" * 50)
-    print("      VERIFYLOGIC - MASTER CONTROL PANEL")
+    print("      VERITAS AI - MASTER CONTROL PANEL")
     print("=" * 50)
     print("  [1] 🧪 Test / Benchmark a Model (Gauntlet)")
     print("  [2] ⚖️  Compare Models (Buyer Sandbox)")
@@ -57,7 +57,7 @@ def main():
         elif choice == "5":
             start_server()
         elif choice == "0":
-            print("\nExiting VerifyLogic Hub. Goodbye!")
+            print("\nExiting Veritas AI Hub. Goodbye!")
             break
         else:
             print("\n⚠️ Invalid selection. Please enter a number between 0 and 5.")

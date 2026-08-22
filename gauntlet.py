@@ -25,7 +25,7 @@ def query_model_api(endpoint_url, text_input, timeout_seconds=5.0):
     req = urllib.request.Request(
         endpoint_url,
         data=payload,
-        headers={"Content-Type": "application/json", "User-Agent": "VerifyLogic-Gauntlet/1.0"}
+        headers={"Content-Type": "application/json", "User-Agent": "VeritasAI-Gauntlet/1.0"}
     )
     
     start_time = time.perf_counter()
@@ -92,7 +92,7 @@ def save_results(model_name, endpoint_url, domain_key, std_acc, edge_acc, avg_la
 
 def run_gauntlet():
     print("=" * 60)
-    print("      VERIFYLOGIC ALGORITHMIC GAUNTLET ENGINE")
+    print("      VERITAS AI ALGORITHMIC GAUNTLET ENGINE")
     print("=" * 60)
 
     # 1. Interactive CLI Prompts
