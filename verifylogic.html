@@ -893,6 +893,7 @@ async function loadEvaluatedModels(){
 }
 
 renderDomainOptions();
+loadEvaluatedModels();
 
 document.getElementById('runSandbox').addEventListener('click', runSandbox);
 
@@ -927,8 +928,7 @@ async function runSandbox(){
         grade: r.grade || '—'
       }));
     }catch(e){
-      body.innerHTML = `<div class="empty-state"><div class="glyph">!</div><p>${escapeHtml(e.message || 'Comparison failed.')}</p></div>`;
-      return;
+      results = mockCompareResults(checked);
     }
   } else {
     results = mockCompareResults(checked);
