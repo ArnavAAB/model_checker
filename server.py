@@ -372,7 +372,15 @@ def run_comparison():
     data = request.get_json(silent=True) or {}
     model_ids = data.get("model_ids", [])
 
-    if not model_ids or len(model_ids) < 2:
+    if not isinstance(model_ids, list):
+        return jsonify({"success": False, "error": "model_ids must be an array."}), 400
+
+    try:
+        model_ids = list(dict.fromkeys(int(model_id) for model_id in model_ids))
+    except (TypeError, ValueError):
+        return jsonify({"success": False, "error": "model_ids must contain valid model IDs."}), 400
+
+    if len(model_ids) < 2:
         return jsonify({"success": False, "error": "Please select at least 2 evaluated models to compare."}), 400
 
     conn = get_db()
