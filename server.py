@@ -189,6 +189,37 @@ def get_marketplace_models():
     return jsonify({"success": True, "models": models})
 
 
+
+@app.route("/api/evaluated-models", methods=["GET"])
+def get_evaluated_models():
+    """
+    Returns all models that have at least one completed evaluation run,
+    along with their latest scores.  Used by the Compare tab to populate
+    the model-selection checklist.
+    """
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT m.id, m.name, m.target_domain,
+               r.standard_accuracy, r.edge_accuracy,
+               r.avg_latency_ms, r.trust_score, r.evaluated_at
+        FROM models m
+        INNER JOIN evaluation_runs r ON r.id = (
+            SELECT id FROM evaluation_runs
+            WHERE model_id = m.id
+            ORDER BY evaluated_at DESC LIMIT 1
+        )
+        ORDER BY r.trust_score DESC
+    ''')
+    rows = []
+    for row in cursor.fetchall():
+        item = dict(row)
+        item["grade"] = calculate_grade(item["trust_score"])
+        rows.append(item)
+    conn.close()
+    return jsonify({"success": True, "models": rows})
+
+
 @app.route("/api/models/<int:model_id>", methods=["GET"])
 def get_model_details(model_id):
     """Returns detailed history and scorecard for a specific model."""
@@ -330,138 +361,52 @@ def register_and_evaluate_model():
     })
 
 
-@app.route("/api/sandbox/compare", methods=["POST"])
-def run_sandbox_comparison():
+@app.route("/api/compare", methods=["POST"])
+def run_comparison():
     """
-    Buyer Sandbox Flow:
-    Accepts an array of model_ids (or custom model URLs) along with either:
-      1) Selected pre-existing domains ('domains': [...], 'scope': 'all'|'standard'|'edge')
-      2) Custom test cases ('custom_test_cases': [{'text': '...', 'expected': '...'}])
-    Returns side-by-side predictions, Match Scores, and leaderboard rankings.
+    Compare Models (Database-Backed):
+    Accepts an array of model_ids for models that have already been evaluated.
+    Pulls their latest evaluation scores from the database and returns a
+    side-by-side comparison leaderboard — no live endpoint calls required.
     """
     data = request.get_json(silent=True) or {}
     model_ids = data.get("model_ids", [])
-    custom_models = data.get("custom_models", [])
-    selected_domains = data.get("domains", [])
-    scope = data.get("scope", "all")
-    custom_cases = data.get("custom_test_cases", [])
 
-    # Accept the frontend's single-domain form as well as the public API shape.
-    if not selected_domains and data.get("domain"):
-        selected_domains = [data["domain"]]
+    if not model_ids or len(model_ids) < 2:
+        return jsonify({"success": False, "error": "Please select at least 2 evaluated models to compare."}), 400
 
     conn = get_db()
     cursor = conn.cursor()
 
-    # 1. Resolve Target Models
-    target_models = []
-    if model_ids:
-        placeholders = ",".join(["?"] * len(model_ids))
-        cursor.execute(f"SELECT id, name, target_domain, endpoint_url FROM models WHERE id IN ({placeholders})", model_ids)
-        for row in cursor.fetchall():
-            target_models.append(dict(row))
+    # Fetch each model's latest evaluation run
+    placeholders = ",".join(["?"] * len(model_ids))
+    cursor.execute(f'''
+        SELECT m.id, m.name, m.target_domain,
+               r.standard_accuracy, r.edge_accuracy,
+               r.avg_latency_ms, r.trust_score, r.evaluated_at
+        FROM models m
+        INNER JOIN evaluation_runs r ON r.id = (
+            SELECT id FROM evaluation_runs
+            WHERE model_id = m.id
+            ORDER BY evaluated_at DESC LIMIT 1
+        )
+        WHERE m.id IN ({placeholders})
+        ORDER BY r.trust_score DESC
+    ''', model_ids)
 
-    for cm in custom_models:
-        target_models.append({
-            "id": None,
-            "name": cm.get("name", "Custom Model"),
-            "target_domain": "custom",
-            "endpoint_url": cm.get("endpoint_url")
-        })
-
-    if not target_models:
-        conn.close()
-        return jsonify({"success": False, "error": "No valid models provided for comparison."}), 400
-
-    # 2. Resolve Test Cases
-    test_cases = []
-    if custom_cases:
-        test_cases = [(c.get("text", ""), c.get("expected", "")) for c in custom_cases if c.get("text")]
-    elif selected_domains:
-        placeholders = ",".join(["?"] * len(selected_domains))
-        query = f"SELECT input_text, expected_category FROM test_cases WHERE domain IN ({placeholders})"
-        if scope == "standard":
-            query += " AND is_edge_case = 0"
-        elif scope == "edge":
-            query += " AND is_edge_case = 1"
-        cursor.execute(query, selected_domains)
-        test_cases = [(r["input_text"], r["expected_category"]) for r in cursor.fetchall()]
-
-    if not test_cases:
-        conn.close()
-        return jsonify({"success": False, "error": "No test cases available for sandbox evaluation."}), 400
-
-    # 3. Run Benchmark Across Models
-    model_stats = {
-        m["name"]: {
-            "id": m["id"],
-            "url": m["endpoint_url"],
-            "domain": m["target_domain"],
-            "correct": 0,
-            "total_latency_ms": 0.0,
-            "predictions": []
-        }
-        for m in target_models
-    }
-
-    for text_in, expected_cat in test_cases:
-        for m in target_models:
-            m_name = m["name"]
-            pred, latency_ms, err = query_model_api(m["endpoint_url"], text_in)
-            model_stats[m_name]["total_latency_ms"] += latency_ms
-
-            is_correct = (pred.lower() == expected_cat.lower()) if (pred and not err) else False
-            if is_correct:
-                model_stats[m_name]["correct"] += 1
-
-            model_stats[m_name]["predictions"].append({
-                "input": text_in,
-                "expected": expected_cat,
-                "predicted": pred,
-                "error": err,
-                "passed": is_correct,
-                "latency_ms": round(latency_ms, 2)
-            })
-
-    # 4. Calculate Scores & Format Leaderboard
-    total_q = len(test_cases)
     leaderboard = []
+    for row in cursor.fetchall():
+        item = dict(row)
+        item["grade"] = calculate_grade(item["trust_score"])
+        leaderboard.append(item)
 
-    for m_name, stat in model_stats.items():
-        acc = (stat["correct"] / total_q * 100.0) if total_q > 0 else 0.0
-        avg_lat = stat["total_latency_ms"] / total_q if total_q > 0 else 0.0
-        
-        speed_score = max(0.0, min(100.0, 100.0 - max(0.0, avg_lat - 50.0) * 0.5))
-        match_score = (0.70 * acc) + (0.30 * speed_score)
-
-        leaderboard.append({
-            "model_id": stat["id"],
-            "name": m_name,
-            "domain": stat["domain"],
-            "match_score": round(match_score, 1),
-            "match_grade": calculate_grade(match_score),
-            "accuracy": round(acc, 1),
-            "avg_latency_ms": round(avg_lat, 2),
-            "predictions": stat["predictions"]
-        })
-
-        # Save to DB if registered
-        if stat["id"]:
-            cursor.execute('''
-                INSERT INTO evaluation_runs 
-                (model_id, domain, run_type, standard_accuracy, edge_accuracy, avg_latency_ms, trust_score)
-                VALUES (?, ?, 'sandbox', ?, ?, ?, ?)
-            ''', (stat["id"], stat["domain"], acc, acc, avg_lat, match_score))
-
-    conn.commit()
     conn.close()
 
-    # Sort leaderboard by Match Score descending
-    leaderboard.sort(key=lambda x: x["match_score"], reverse=True)
+    if len(leaderboard) < 2:
+        return jsonify({"success": False, "error": "Could not find evaluation data for the selected models. Run a Gauntlet evaluation first."}), 400
 
     return jsonify({
         "success": True,
-        "total_test_cases": total_q,
         "leaderboard": leaderboard
     })
 
