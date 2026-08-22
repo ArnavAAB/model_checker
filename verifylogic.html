@@ -185,18 +185,6 @@
   .close-btn{ background:none; border:1px solid var(--line); color:var(--paper-dim); width:30px; height:30px; border-radius:50%; cursor:pointer; font-size:14px;}
   .close-btn:hover{ color:var(--paper); border-color:var(--paper-dim); }
 
-  /* ---------- sandbox ---------- */
-  .sandbox-grid{ display:grid; grid-template-columns:380px 1fr; gap:24px; align-items:start; }
-  .picker-list{ display:flex; flex-direction:column; gap:8px; margin:14px 0 20px; max-height:220px; overflow:auto; padding-right:4px;}
-  .compare-models{ display:flex; flex-direction:column; gap:8px; margin:10px 0 20px; }
-  .compare-model-row{ display:grid; grid-template-columns:1fr 1.35fr; gap:8px; }
-  .model-check-item{ display:flex; align-items:center; gap:10px; padding:10px 12px; border:1px solid var(--line); border-radius:var(--radius); cursor:pointer; transition:border-color .15s; }
-  .model-check-item:hover{ border-color:var(--stamp); }
-  .model-check-item input[type=checkbox]{ accent-color:var(--stamp); width:16px; height:16px; cursor:pointer; }
-  .model-check-item .model-info{ flex:1; }
-  .model-check-item .model-name{ font-size:13px; font-weight:600; color:var(--paper); }
-  .model-check-item .model-meta{ font-size:11px; color:var(--paper-dim); font-family:'IBM Plex Mono'; margin-top:2px; }
-  .model-check-item .model-score{ font-size:14px; font-weight:700; color:var(--stamp); font-family:'IBM Plex Mono'; }
   .pick-row{ display:flex; align-items:center; gap:10px; padding:9px 10px; border:1px solid var(--line); border-radius:var(--radius); font-size:13px; }
   .pick-row input{ accent-color:var(--stamp); }
   .pick-row span.dn{ color:var(--paper-dim); font-size:11px; margin-left:auto; font-family:'IBM Plex Mono'; }
@@ -213,7 +201,6 @@
   }
   .tabbtns button.active{ border-color:var(--stamp); color:var(--stamp); }
   .run-btn{ width:100%; margin-top:20px; justify-content:center; }
-  .sandbox-results{ min-height:340px; }
   .empty-state{
     height:100%; min-height:340px; display:flex; flex-direction:column; align-items:center; justify-content:center;
     color:var(--paper-dim); border:1px dashed var(--line); border-radius:6px; text-align:center; padding:40px;
@@ -286,7 +273,6 @@
   @media (max-width: 880px){
     .hero-grid{ grid-template-columns:1fr; }
     .split{ grid-template-columns:1fr; }
-    .sandbox-grid{ grid-template-columns:1fr; }
     .hero h1{ font-size:32px; }
     .navlinks{ display:none; }
     .chat-shell{ grid-template-columns:1fr; }
@@ -306,7 +292,6 @@
   <div class="nav">
     <div class="brand"><span class="mark">V</span> VERITAS AI</div>
     <div class="navlinks">
-      <a href="#compare" data-view="compare">Compare</a>
       <a href="#evaluate" data-view="evaluate">Evaluate</a>
       <a href="#chatbot" data-view="chatbot">AI Advisor</a>
       <a href="#leaderboard" data-view="leaderboard">Leaderboard</a>
@@ -334,28 +319,14 @@
       </div>
       <div class="cta-row">
         <a href="#leaderboard" class="btn btn-primary">View leaderboard →</a>
-        <a href="#sandbox" class="btn btn-ghost">Run buyer sandbox</a>
+        <a href="#evaluate" class="btn btn-ghost">Evaluate a model</a>
       </div>
     </div>
     <div class="stampcard" id="heroCard"><!-- filled by JS --></div>
   </div>
 </section>
 
-<section id="compare" class="tab-view active">
-  <div class="wrap">
-    <div class="view-head"><div><div class="eyebrow">Buyer workspace</div><h2 class="section-title">Compare models</h2><p class="section-sub">Select two or more previously evaluated models to compare their benchmark scores side-by-side.</p></div></div>
-    <div class="sandbox-grid">
-      <div class="card">
-        <label class="field-label">Select evaluated models to compare</label>
-        <div id="compareModels" style="max-height:320px; overflow-y:auto; margin:10px 0;"><div class="empty-state" style="padding:24px;"><div class="glyph">◌</div><p>Loading evaluated models…</p></div></div>
-        <button class="btn btn-primary run-btn" id="runSandbox">Compare selected models</button>
-      </div>
-      <div class="card sandbox-results"><div class="view-head" style="margin-bottom:16px;"><div><h3>Comparison results</h3><p class="cap">Select models and compare to see scores side-by-side.</p></div><span class="tag">GRAPH</span></div><div id="sandboxBody"><div class="empty-state"><div class="glyph">◌</div><p>Select at least two evaluated models and click compare.</p></div></div></div>
-    </div>
-  </div>
-</section>
-
-<section id="evaluate" class="tab-view">
+<section id="evaluate" class="tab-view active">
   <div class="wrap"><div class="view-head"><div><div class="eyebrow">Public benchmark</div><h2 class="section-title">Evaluate one model</h2><p class="section-sub">Run a full verification against a public test suite and save the scorecard to the marketplace.</p></div></div>
     <div class="eval-grid"><div class="card">
       <label class="field-label">1 — Model name</label><input id="evalName" type="text" placeholder="Model name">
@@ -424,7 +395,6 @@
           <div><b>AI Copilot</b><span>online</span></div>
         </div>
         <div class="chat-side-label">Suggested topics</div>
-        <button class="chat-topic" type="button" data-chat-prompt="Compare the top two models">Compare the top two models</button>
         <button class="chat-topic" type="button" data-chat-prompt="Explain my trust score">Explain my trust score</button>
         <button class="chat-topic" type="button" data-chat-prompt="Find the fastest model">Find the fastest model</button>
       </aside>
@@ -550,7 +520,7 @@ document.querySelectorAll('.navlinks a[data-view]').forEach(link=>{
   });
 });
 const initialView = location.hash.replace('#','');
-activateView(['compare','evaluate','chatbot','leaderboard'].includes(initialView) ? initialView : 'compare');
+activateView(['evaluate','chatbot','leaderboard'].includes(initialView) ? initialView : 'evaluate');
 
 /* ============================= CONNECTION ============================= */
 async function tryConnect(){
@@ -836,174 +806,14 @@ document.getElementById('detailClose').addEventListener('click', ()=>{
   renderLeaderboard();
 });
 
-/* ============================= SANDBOX ============================= */
+/* ============================= EVALUATE ============================= */
 function renderDomainOptions(){
   const options = domains.map(key=>`<option value="${key}">${DOMAIN_NAMES[key] || key}</option>`).join('');
   const evalDomainEl = document.getElementById('evalDomain');
   if(evalDomainEl) evalDomainEl.innerHTML = options;
 }
 
-/* --- Evaluated model checklist for Compare tab --- */
-let evaluatedModels = [];
-
-async function loadEvaluatedModels(){
-  const container = document.getElementById('compareModels');
-  try{
-    if(LIVE){
-      const res = await fetch(CONFIG.apiBase + '/api/evaluated-models');
-      const data = await res.json();
-      if(data.success && data.models && data.models.length > 0){
-        evaluatedModels = data.models;
-      } else {
-        evaluatedModels = [];
-      }
-    } else {
-      // Demo fallback: use leaderboard models
-      evaluatedModels = models.map(m => ({
-        id: m.id, name: m.name, target_domain: m.domain || 'unknown',
-        standard_accuracy: m.accuracy || 0, edge_accuracy: m.edge_accuracy || 0,
-        avg_latency_ms: m.latency_ms || 0, trust_score: m.trust_score || 0,
-        grade: m.grade || '—'
-      }));
-    }
-  }catch(e){
-    evaluatedModels = models.map(m => ({
-      id: m.id, name: m.name, target_domain: m.domain || 'unknown',
-      standard_accuracy: m.accuracy || 0, edge_accuracy: m.edge_accuracy || 0,
-      avg_latency_ms: m.latency_ms || 0, trust_score: m.trust_score || 0,
-      grade: m.grade || '—'
-    }));
-  }
-
-  if(evaluatedModels.length === 0){
-    container.innerHTML = `<div class="empty-state" style="padding:24px;"><div class="glyph">∅</div><p>No evaluated models found. Use the <b>Evaluate</b> tab to benchmark a model first.</p></div>`;
-    return;
-  }
-
-  container.innerHTML = evaluatedModels.map(m => `
-    <label class="model-check-item">
-      <input type="checkbox" value="${m.id}" class="compare-checkbox">
-      <div class="model-info">
-        <div class="model-name">${escapeHtml(m.name)}</div>
-        <div class="model-meta">${DOMAIN_NAMES[m.target_domain] || m.target_domain} · ${Math.round(m.standard_accuracy)}% std · ${Math.round(m.avg_latency_ms)}ms</div>
-      </div>
-      <div class="model-score">${Math.round(m.trust_score)}</div>
-    </label>
-  `).join('');
-}
-
 renderDomainOptions();
-loadEvaluatedModels();
-
-document.getElementById('runSandbox').addEventListener('click', runSandbox);
-
-async function runSandbox(){
-  const body = document.getElementById('sandboxBody');
-
-  // Collect checked model IDs
-  const checked = [...document.querySelectorAll('.compare-checkbox:checked')].map(cb => parseInt(cb.value));
-
-  if(checked.length < 2){
-    body.innerHTML = `<div class="empty-state"><div class="glyph">!</div><p>Please select at least <b>2</b> evaluated models to compare.</p></div>`;
-    return;
-  }
-
-  body.innerHTML = `<div class="empty-state"><div class="glyph">···</div><p>Fetching comparison data…</p></div>`;
-
-  let results;
-  if(LIVE){
-    try{
-      const res = await fetch(CONFIG.apiBase + '/api/compare', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ model_ids: checked })
-      });
-      const data = await res.json();
-      if(!res.ok || !data.success) throw new Error(data.error || 'Compare request failed');
-      results = data.leaderboard.map(r => ({
-        id: r.id, name: r.name, domain: r.target_domain,
-        trust_score: Math.round(r.trust_score ?? 0),
-        standard_accuracy: Math.round(r.standard_accuracy ?? 0),
-        edge_accuracy: Math.round(r.edge_accuracy ?? 0),
-        avg_latency_ms: Math.round(r.avg_latency_ms ?? 0),
-        grade: r.grade || '—'
-      }));
-    }catch(e){
-      results = mockCompareResults(checked);
-    }
-  } else {
-    results = mockCompareResults(checked);
-  }
-
-  results.sort((a,b) => b.trust_score - a.trust_score);
-  renderSandboxResults(results, !LIVE);
-}
-
-function mockCompareResults(selectedIds){
-  return selectedIds.map(id => {
-    const em = evaluatedModels.find(m => m.id === id);
-    if(em) return {
-      id: em.id, name: em.name, domain: em.target_domain,
-      trust_score: Math.round(em.trust_score), standard_accuracy: Math.round(em.standard_accuracy),
-      edge_accuracy: Math.round(em.edge_accuracy), avg_latency_ms: Math.round(em.avg_latency_ms),
-      grade: em.grade || '—'
-    };
-    const m = models.find(x => x.id === id) || { id, name:'Model '+id, trust_score:50, accuracy:60, edge_accuracy:40, latency_ms:80 };
-    return { id:m.id, name:m.name, domain:'unknown', trust_score:Math.round(m.trust_score||50),
-      standard_accuracy:Math.round(m.accuracy||60), edge_accuracy:Math.round(m.edge_accuracy||40),
-      avg_latency_ms:Math.round(m.latency_ms||80), grade:'—' };
-  });
-}
-
-function renderSandboxResults(results, demo){
-  const body = document.getElementById('sandboxBody');
-
-  const rowsHtml = results.map((r,i) => `
-    <div class="match-row">
-      <div class="match-rank">${i+1}</div>
-      <div class="match-name"><b>${escapeHtml(r.name)}</b><span>${r.standard_accuracy}% std · ${r.edge_accuracy}% edge · ${r.avg_latency_ms}ms</span></div>
-      <div class="match-score">${r.trust_score}<small style="font-size:10px;color:var(--paper-dim);margin-left:2px;">${r.grade}</small></div>
-    </div>
-  `).join('');
-
-  /* Detailed comparison table */
-  const detailRows = results.map((r,i) => `
-    <tr>
-      <td>${i+1}</td>
-      <td><b>${escapeHtml(r.name)}</b></td>
-      <td class="num">${r.standard_accuracy}%</td>
-      <td class="num">${r.edge_accuracy}%</td>
-      <td class="num">${r.avg_latency_ms} ms</td>
-      <td class="num" style="font-weight:700;">${r.trust_score}</td>
-      <td>${r.grade}</td>
-    </tr>
-  `).join('');
-
-  body.innerHTML = `
-    ${demo ? `<div class="tag" style="margin-bottom:14px; display:inline-block;">demo data — connect API for live scoring</div>` : ''}
-    ${rowsHtml}
-    <div class="chart-box" style="height:220px; margin-top:20px;"><canvas id="sandboxChart"></canvas></div>
-    <div class="pred-table-wrap" style="margin-top:16px;">
-      <table>
-        <thead><tr><th>#</th><th>Model</th><th>Std Acc</th><th>Edge Acc</th><th>Avg Latency</th><th>Trust Score</th><th>Grade</th></tr></thead>
-        <tbody>${detailRows}</tbody>
-      </table>
-    </div>
-  `;
-
-  if(charts.sandbox) charts.sandbox.destroy();
-  charts.sandbox = new Chart(document.getElementById('sandboxChart'), {
-    type:'bar',
-    data:{ labels: results.map(r => r.name),
-      datasets:[
-        {label:'Trust Score', data:results.map(r => r.trust_score), backgroundColor:'#E8A33D'},
-        {label:'Standard Accuracy', data:results.map(r => r.standard_accuracy), backgroundColor:'#6C93D8'},
-        {label:'Edge Accuracy', data:results.map(r => r.edge_accuracy), backgroundColor:'#7DD8A3'},
-      ]},
-    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{position:'bottom', labels:{color:'#9EA6B4', font:{family:'IBM Plex Mono', size:10}, boxWidth:10}} },
-      scales:{ x:{ max:100, ticks:{color:'#9EA6B4', font:{size:10}}, grid:{color:'#2A3140'} }, y:{ ticks:{color:'#9EA6B4', font:{size:10.5}}, grid:{display:false} } } }
-  });
-}
 
 /* ============================= CHATBOT ============================= */
 function addChatMessage(role, text, pending=false){
@@ -1094,7 +904,6 @@ function renderAll(){
   renderHero();
   renderLeaderboard();
   renderBreakdown();
-  loadEvaluatedModels();
   renderDomainOptions();
   renderReel();
 }

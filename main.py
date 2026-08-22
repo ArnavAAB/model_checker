@@ -5,17 +5,15 @@ import os
 # Direct imports from your existing modules
 import benchmark_db
 from gauntlet import run_gauntlet
-from compare import run_comparison
 
 def show_menu():
     print("\n" + "=" * 50)
     print("      VERITAS AI - MASTER CONTROL PANEL")
     print("=" * 50)
     print("  [1] 🧪 Test / Benchmark a Model (Gauntlet)")
-    print("  [2] ⚖️  Compare Models (Buyer Sandbox)")
-    print("  [3] 🔄 Reset & Re-Seed Benchmark Database")
-    print("  [4] 🤖 Launch Local Test Models (Port 5001 & 5002)")
-    print("  [5] 🌐 Start Backend REST API Server (Port 5000)")
+    print("  [2] 🔄 Reset & Re-Seed Benchmark Database")
+    print("  [3] 🤖 Launch Local Test Models (Port 5001 & 5002)")
+    print("  [4] 🌐 Start Backend REST API Server (Port 5000)")
     print("  [0] 🚪 Exit")
     print("=" * 50)
 
@@ -42,25 +40,23 @@ def start_server():
 def main():
     while True:
         show_menu()
-        choice = input("Select an action (0-5): ").strip()
+        choice = input("Select an action (0-4): ").strip()
 
         if choice == "1":
             run_gauntlet()
         elif choice == "2":
-            run_comparison()
-        elif choice == "3":
             print("\nRebuilding SQLite database tables and seeding test suites...")
             benchmark_db.init_db()
             benchmark_db.seed_db()
-        elif choice == "4":
+        elif choice == "3":
             launch_background_models()
-        elif choice == "5":
+        elif choice == "4":
             start_server()
         elif choice == "0":
             print("\nExiting Veritas AI Hub. Goodbye!")
             break
         else:
-            print("\n⚠️ Invalid selection. Please enter a number between 0 and 5.")
+            print("\n⚠️ Invalid selection. Please enter a number between 0 and 4.")
 
 if __name__ == "__main__":
     main()

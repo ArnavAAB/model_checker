@@ -3,9 +3,8 @@ import time
 import json
 import urllib.request
 import urllib.error
-from pathlib import Path
 
-DB_NAME = str(Path(__file__).resolve().parent / "verifylogic_benchmarks.db")
+DB_NAME = "verifylogic_benchmarks.db"
 
 DOMAINS = {
     "1": ("customer_support", "Customer Support Triage"),

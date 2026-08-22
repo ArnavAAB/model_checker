@@ -190,36 +190,6 @@ def get_marketplace_models():
 
 
 
-@app.route("/api/evaluated-models", methods=["GET"])
-def get_evaluated_models():
-    """
-    Returns all models that have at least one completed evaluation run,
-    along with their latest scores.  Used by the Compare tab to populate
-    the model-selection checklist.
-    """
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute('''
-        SELECT m.id, m.name, m.target_domain,
-               r.standard_accuracy, r.edge_accuracy,
-               r.avg_latency_ms, r.trust_score, r.evaluated_at
-        FROM models m
-        INNER JOIN evaluation_runs r ON r.id = (
-            SELECT id FROM evaluation_runs
-            WHERE model_id = m.id
-            ORDER BY evaluated_at DESC LIMIT 1
-        )
-        ORDER BY r.trust_score DESC
-    ''')
-    rows = []
-    for row in cursor.fetchall():
-        item = dict(row)
-        item["grade"] = calculate_grade(item["trust_score"])
-        rows.append(item)
-    conn.close()
-    return jsonify({"success": True, "models": rows})
-
-
 @app.route("/api/models/<int:model_id>", methods=["GET"])
 def get_model_details(model_id):
     """Returns detailed history and scorecard for a specific model."""
@@ -358,64 +328,6 @@ def register_and_evaluate_model():
             "speed_score": round(speed_score, 1)
         },
         "logs": logs
-    })
-
-
-@app.route("/api/compare", methods=["POST"])
-def run_comparison():
-    """
-    Compare Models (Database-Backed):
-    Accepts an array of model_ids for models that have already been evaluated.
-    Pulls their latest evaluation scores from the database and returns a
-    side-by-side comparison leaderboard — no live endpoint calls required.
-    """
-    data = request.get_json(silent=True) or {}
-    model_ids = data.get("model_ids", [])
-
-    if not isinstance(model_ids, list):
-        return jsonify({"success": False, "error": "model_ids must be an array."}), 400
-
-    try:
-        model_ids = list(dict.fromkeys(int(model_id) for model_id in model_ids))
-    except (TypeError, ValueError):
-        return jsonify({"success": False, "error": "model_ids must contain valid model IDs."}), 400
-
-    if len(model_ids) < 2:
-        return jsonify({"success": False, "error": "Please select at least 2 evaluated models to compare."}), 400
-
-    conn = get_db()
-    cursor = conn.cursor()
-
-    # Fetch each model's latest evaluation run
-    placeholders = ",".join(["?"] * len(model_ids))
-    cursor.execute(f'''
-        SELECT m.id, m.name, m.target_domain,
-               r.standard_accuracy, r.edge_accuracy,
-               r.avg_latency_ms, r.trust_score, r.evaluated_at
-        FROM models m
-        INNER JOIN evaluation_runs r ON r.id = (
-            SELECT id FROM evaluation_runs
-            WHERE model_id = m.id
-            ORDER BY evaluated_at DESC LIMIT 1
-        )
-        WHERE m.id IN ({placeholders})
-        ORDER BY r.trust_score DESC
-    ''', model_ids)
-
-    leaderboard = []
-    for row in cursor.fetchall():
-        item = dict(row)
-        item["grade"] = calculate_grade(item["trust_score"])
-        leaderboard.append(item)
-
-    conn.close()
-
-    if len(leaderboard) < 2:
-        return jsonify({"success": False, "error": "Could not find evaluation data for the selected models. Run a Gauntlet evaluation first."}), 400
-
-    return jsonify({
-        "success": True,
-        "leaderboard": leaderboard
     })
 
 
